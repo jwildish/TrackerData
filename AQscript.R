@@ -4,19 +4,43 @@ library(jsonlite)
 library(dplyr)
 library(stringr)
 library(tidyverse)
-
 library(ggplot2)
 library(plotly)
 library(lubridate)
 library(stringi)
 library(data.table)
-
+library(tidyverse)
+library(purrr)
+library(plyr)
+library(shiny)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(tidyverse)
+library(data.table)
+library(scales)
+library(DT)
+library(tools)
+library(shinythemes)
+library(shinycssloaders)
+library(tidyverse)
+library(formattable)
+library(DT)
+library(scales)
+library(leaflet)
+library(sf)
+library(httr)
+library(jsonlite)
+library(latticeExtra)
+library(reactable)
+library(stringr)
+library(plyr)
 #pm25
 citiespm25 <- "https://api.openaq.org/v1/cities"
 
 citiespm25 <- GET(url = citiespm25, parameter="pm25",
                   query = list(limit = 10000))
-citiespm25 <- content(citiespm25, as = "text", encoding = "UTF-8")
+citiespm25 <- httr::content(citiespm25, as = "text", encoding = "UTF-8")
 citiespm25 <- fromJSON(citiespm25, flatten = TRUE) %>% 
   data.frame()
 citiespm25$alleng <- stri_enc_isascii(citiespm25$results.city)
@@ -26,8 +50,6 @@ citiespm25 <- subset(citiespm25, results.count >= 10000 & results.locations >=1)
 
 citiespm25 <- citiespm25$results.city
 
-cityname <- "Bern"
-
 
 no2 <- function(cityname) {(
   
@@ -36,7 +58,7 @@ no2 <- function(cityname) {(
   request <- GET(url = path, 
                  query = list(city= cityname, 
                               parameter = "no2",
-                              limit = 100))
+                              limit = 10000))
   
   
   response <- content(request, as = "text", encoding = "UTF-8")
@@ -49,12 +71,12 @@ no2 <- function(cityname) {(
 )
 }
 
-lapply(citieslist, no2)
+lapply(citiespm25, no2)
 
 
 
-filenames <- list.files(path="./Data/no2/",pattern="*.csv")
-fullpath=file.path("./Data/no2/",filenames)
+filenames <- list.files(path="C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/no2/",pattern="*.csv")
+fullpath=file.path("C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/no2/",filenames)
 dataset <- do.call("rbind.fill",lapply(fullpath,FUN=function(files){read.csv(files)}))
 dataset <- subset(dataset, results.value > 0)
 dataset <- dataset %>% separate(results.date.local, c("Day", "Time"), sep = "T")
@@ -76,7 +98,7 @@ pm25 <- function(cityname) {(
   
   request <- GET(url = path, 
                  query = list(city= cityname, 
-                              parameter = "pm25", limit = 100, location ="Boston - Roxbury"))
+                              parameter = "pm25", limit = 10000))
   
   
   response <- content(request, as = "text", encoding = "UTF-8")
@@ -90,10 +112,10 @@ pm25 <- function(cityname) {(
 }
 
 
-lapply(citieslist, pm25)
+lapply(citiespm25, pm25)
 getwd()
-filenames <- list.files(path="./Data/pm25/",pattern="*.csv")
-fullpath=file.path("./Data/pm25/",filenames)
+filenames <- list.files(path="C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/pm25/",pattern="*.csv")
+fullpath=file.path("C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/pm25/",filenames)
 dataset <- do.call("rbind.fill",lapply(fullpath,FUN=function(files){read.csv(files)}))
 dataset <- subset(dataset, results.value > 0)
 table(dataset$results.unit)
@@ -103,8 +125,8 @@ dataset$results.value <- ifelse(dataset$unit =="ppm", dataset$results.value * 1.
 dataset$units <- "micrograms per cubic meter"
 datasetcountry <- dataset %>% dplyr::group_by(results.parameter, results.country, units) %>% dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value))
 dataset2 <- dataset %>% dplyr::group_by(results.parameter,results.city, results.country, results.coordinates.latitude, results.coordinates.longitude, units) %>%
-  dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value))
-
+  dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value), tally = dplyr::n())
+dataset2 <- (subset(dataset2, tally > 400))
 
 write.csv(dataset2, "./dataset2pm25test.csv")
 
