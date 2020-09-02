@@ -51,6 +51,8 @@ mergedf$mortality <- ifelse(mergedf$mortality < 0, 0, mergedf$mortality)
 mergedf$mortality <- mergedf$mortality * mergedf$POPESTIMATE2019 * 863/100000
 sum(mergedf$mortality)
 sum(mergedf$POPESTIMATE2019)
+st_write(mergedf, "CountyAQRisk.shp", driver="ESRI Shapefile") 
+
 leaflet(data = mergedf) %>%
   addProviderTiles(providers$Stamen.TonerLite) %>%
   addPolygons(data = mergedf,
@@ -69,7 +71,7 @@ leaflet(data = mergedf) %>%
             opacity = 1) 
 
 
-
+st_write(mergedf, "CountyAQRisk.shp", driver="ESRI Shapefile") 
 
 glimpse(mergedf)
 glimpse(countypop)
