@@ -58,10 +58,10 @@ no2 <- function(cityname) {(
   request <- GET(url = path, 
                  query = list(city= cityname, 
                               parameter = "no2",
-                              limit = 10000))
+                              limit = 1000))
   
   
-  response <- content(request, as = "text", encoding = "UTF-8")
+  response <- httr::content(request, as = "text", encoding = "UTF-8")
   df <- fromJSON(response, flatten = TRUE) %>% 
     data.frame()
   
@@ -94,20 +94,22 @@ write.csv(dataset2, "./dataset2no2test.csv")
 
 pm25 <- function(cityname) {(
   
-  tryCatch({ path <- "https://api.openaq.org/v1/measurements"
+  tryCatch({ 
+    path <- "https://api.openaq.org/v1/measurements"
   
   request <- GET(url = path, 
                  query = list(city= cityname, 
-                              parameter = "pm25", limit = 10000))
+                              parameter = "pm25", limit = 1000))
   
   
-  response <- content(request, as = "text", encoding = "UTF-8")
+  response <- httr::content(request, as = "text", encoding = "UTF-8")
   df <- fromJSON(response, flatten = TRUE) %>% 
     data.frame()
   
   path <- "C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/pm25/"
   
-  write.table(df, paste0(path,cityname, "_pm25", ".csv"), append = FALSE, sep = ",", row.names = FALSE)}, error=function(e) NULL) 
+  write.table(df, paste0(path,cityname, "_pm25", ".csv"), append = FALSE, sep = ",", row.names = FALSE)
+  }, error=function(e) NULL) 
 )
 }
 
