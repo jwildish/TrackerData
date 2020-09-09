@@ -130,5 +130,8 @@ dataset2 <- dataset %>% dplyr::group_by(results.parameter,results.city, results.
   dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value), tally = dplyr::n())
 dataset2 <- (subset(dataset2, tally > 400))
 
+dataset2$results.city <- str_replace_all(dataset2$results.city, "[[:punct:]]", " ")
+dataset2$results.city <- str_replace_all(dataset2$results.city, "-", " ")
+
 write.csv(dataset2, "./dataset2pm25test.csv")
 
