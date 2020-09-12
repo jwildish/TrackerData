@@ -271,7 +271,7 @@ combinedday <- combined %>% group_by(Year, day, month, Type) %>% summarise(value
 combinedday$Year <- as.character(combinedday$Year)
 combinedday <- subset(combinedday, day < as.numeric(yday(Sys.Date())))
 
-combineddaytpt <- combinedday %>% group_by(Year, day, month) %>% summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions, na.rm=TRUE))
+combineddaytpt <- combinedday %>% dplyr::group_by(Year, day, month) %>% dplyr::summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions, na.rm=TRUE))
 combineddaytpt$carbonemissions <-combineddaytpt$carbonemissions/1000000
 
 write.csv(combineddaytpt, "combineddaytpt.csv")
@@ -287,7 +287,7 @@ datasource -> combined
 combined$pctprod <- combined$sourceprod / combined$value
 combined$day<-yday(combined$Data)
 combined <- subset(combined, day < as.numeric(yday(Sys.Date())))
-combined <- combined %>% group_by(Year, day, month, hour, Type) %>% summarise(value = mean(value),  pctprod = mean(pctprod), emissions = mean(emissions))
+combined <- combined %>% group_by(Year, day, month, hour, Type) %>% dplyr::summarise(value = mean(value),  pctprod = mean(pctprod), emissions = mean(emissions))
 combined <- subset(combined, !is.na(Year))
 combined <- subset(combined, !is.na(value))
 
@@ -328,18 +328,18 @@ combined$pctprod <- combined$sourceprod / combined$value
 combined$day<-yday(combined$Data)
 combined <- subset(combined, !is.na(combined))
 
-combined <- combined %>% group_by(Year, day, month, hour, Type) %>% summarise(value = mean(value),  pctprod = mean(pctprod), emissions = mean(emissions), sourceprod = mean(sourceprod))
+combined <- combined %>% group_by(Year, day, month, hour, Type) %>% dplyr::summarise(value = mean(value),  pctprod = mean(pctprod), emissions = mean(emissions), sourceprod = mean(sourceprod))
 
 combined$carbonemissions <- combined$value * combined$pctprod * combined$emissions * .001
 
-combinedday <- combined %>% group_by(Year, day, month, Type) %>% summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions), sourceprod = sum(sourceprod))
+combinedday <- combined %>% group_by(Year, day, month, Type) %>% dplyr::summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions), sourceprod = sum(sourceprod))
 
 combinedday$daysince18 <- ifelse(combinedday$Year == 2019, combinedday$day + 365,
                                  ifelse(combinedday$Year == 2020, combinedday$day + 365 + 365,
                                         combinedday$day))
 
 combinedday$Year <- as.character(combinedday$Year)
-combineddaytpt <- combinedday %>% group_by(Year, day, month, daysince18, Type) %>% summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions), sourceprod = sum(sourceprod))
+combineddaytpt <- combinedday %>% group_by(Year, day, month, daysince18, Type) %>% dplyr::summarise(value = sum(value),  pctprod = mean(pctprod), carbonemissions = sum(carbonemissions), sourceprod = sum(sourceprod))
 
 combineddaytpt$typedes <- ifelse(combineddaytpt$Type == "coal" | combineddaytpt$Type == "natgas" | combineddaytpt$Type == "oil", "Fossil Fuels", "Renewables")
 write.csv(combineddaytpt, "combinedsource.csv")
@@ -349,7 +349,7 @@ combinedsource <- read.csv("./combined.csv")
 combinedsource$Year <- as.character(combinedsource$Year)
 combinedsource$pctprod <- combinedsource$sourceprod / combinedsource$value
 combinedsource$day<-yday(combinedsource$Data)
-combinedsource <- combinedsource %>% group_by(day, Type, Year) %>% summarise(sourceprod = sum(sourceprod), pctprod = mean(pctprod))
+combinedsource <- combinedsource %>% group_by(day, Type, Year) %>% dplyr::summarise(sourceprod = sum(sourceprod), pctprod = mean(pctprod))
 glimpse(combinedsource)
 combinedsource <- subset(combinedsource, !is.na(pctprod))
 combinedsource <- subset(combinedsource, pctprod > 0)

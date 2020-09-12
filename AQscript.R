@@ -35,6 +35,10 @@ library(latticeExtra)
 library(reactable)
 library(stringr)
 library(plyr)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+
 #pm25
 citiespm25 <- "https://api.openaq.org/v1/cities"
 
@@ -74,7 +78,7 @@ no2 <- function(cityname) {(
 lapply(citiespm25, no2)
 
 
-
+library(plyr)
 filenames <- list.files(path="C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/no2/",pattern="*.csv")
 fullpath=file.path("C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/no2/",filenames)
 dataset <- do.call("rbind.fill",lapply(fullpath,FUN=function(files){read.csv(files)}))
@@ -82,6 +86,12 @@ dataset <- subset(dataset, results.value > 0)
 dataset <- dataset %>% separate(results.date.local, c("Day", "Time"), sep = "T")
 glimpse(dataset)
 dataset$units <- ifelse(dataset$results.unit == "ppm", "ppm", "micrograms")
+today <- yday(Sys.Date())-4
+dataset$Day <- as.Date(dataset$Day)
+dataset$dayofyear <- yday(dataset$Day)
+glimpse(dataset)
+dataset <- subset(dataset, dayofyear >= today)
+min(dataset$dayofyear)
 dataset$results.value <- ifelse(dataset$unit =="ppm", dataset$results.value * 1.88*1000, dataset$results.value)
 dataset$units <- "micrograms per cubic meter"
 datasetcountry <- dataset %>% dplyr::group_by(results.parameter, results.country, units) %>% dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value))
@@ -115,23 +125,29 @@ pm25 <- function(cityname) {(
 
 
 lapply(citiespm25, pm25)
-getwd()
+require(plyr)
+
 filenames <- list.files(path="C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/pm25/",pattern="*.csv")
 fullpath=file.path("C:/Users/Jordan/OneDrive - Earth Economics/Documents/GlobalAirQuality/Data/pm25/",filenames)
 dataset <- do.call("rbind.fill",lapply(fullpath,FUN=function(files){read.csv(files)}))
 dataset <- subset(dataset, results.value > 0)
-table(dataset$results.unit)
-dataset <- dataset %>% separate(results.date.local, c("Day", "Time"), sep = "T")
+glimpse(dataset)
+dataset <- dataset %>% separate(results.date.utc, c("Day", "Time"), sep = "T")
 dataset$units <- ifelse(dataset$results.unit == "ppm", "ppm", "micrograms")
 dataset$results.value <- ifelse(dataset$unit =="ppm", dataset$results.value * 1.88*1000, dataset$results.value)
 dataset$units <- "micrograms per cubic meter"
+today <- yday(Sys.Date())-4
+dataset$Day <- as.Date(dataset$Day)
+dataset$dayofyear <- yday(dataset$Day)
+glimpse(dataset)
+dataset <- subset(dataset, dayofyear >= today)
+min(dataset$dayofyear)
 datasetcountry <- dataset %>% dplyr::group_by(results.parameter, results.country, units) %>% dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value))
 dataset2 <- dataset %>% dplyr::group_by(results.parameter,results.city, results.country, results.coordinates.latitude, results.coordinates.longitude, units) %>%
   dplyr::summarise(valuemax = max(results.value), valuemean = mean(results.value), tally = dplyr::n())
-dataset2 <- (subset(dataset2, tally > 400))
+dataset2 <- (subset(dataset2, tally > 4))
 
-dataset2$results.city <- str_replace_all(dataset2$results.city, "[[:punct:]]", " ")
-dataset2$results.city <- str_replace_all(dataset2$results.city, "-", " ")
+#dataset2$results.city <- str_replace_all(dataset2$results.city, "[[:punct:]]", " ")
 
 write.csv(dataset2, "./dataset2pm25test.csv")
 
